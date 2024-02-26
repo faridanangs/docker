@@ -1,0 +1,7 @@
+FROM nginx:alpine
+
+ARG VERSION=0.0.0.0
+
+RUN echo "${VERSION}" > version.txt
+
+COPY . /usr/share/nginx/html

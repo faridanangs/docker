@@ -1,0 +1,101 @@
+kalimat  default command containner image = data yang ada di dalam Dockerfile
+
+### Service top level element (1)
+ - service top-level element digunakan untk mendefinisikan list konfigurasi yang ingin di jalankan
+ - kita bisa mendefinisikan banyak container pada service element ini
+
+### Image element (5)
+ - image element digunakan untk mendefinisikan image container yang ingin di gunakan
+ - dapat menggunakan image dari public atau private
+ - namun di tutorial ini kita pokus pada public, karna private registry membutuhkan auth dan auth setiap registry bisa berbedabeda
+
+### build element (8)
+ - kita bisa gunakan docker build element untuk mem-build dockerfile yang ada sebagai image yg nantinya di gunakan cpntainer
+ - value dari build element ada path lokadi dockerfile yang diinginkan
+ - best praktiknya adalah TIDAK MENGGUNAKAN IMAGE-ELEMENT DENGAN BUILD-ELEMENT secara bersamaan
+
+### multiple element
+ - karna kita bisa menjalankan banyak container dngan docker compose, terkadang bisa saja container tersebut butuh custom file, permasalahannya adalah kita tidak mungkin ounya file dgnan nama yg sama (Dockerfile) di dalam satu folder yang sama
+ - solusinya adalah membuat dockerfile difolder berbeda.
+
+### Build-element: Custom dockerfile name (9-10)
+ - terkadang di beberapa kasus tertentu we want to put some dockerfile in one folder, otomatis nama dockerfilenya harus beda.
+  CONTOH: Dockerfile.staging atau Dockerfile.prod
+ - kita bisa mendefinisikan dockerfile element sebagai sub element dari buildd untuk nama custom dockerfile name
+ - untuk mendefinisikan path dari dockerfile, kita gunakan context element
+
+### Build-element: Args sub element (11)
+ - saat kita mendefinisikan args di dockerfile, kita bisa meng-override valuenya dengan opsi --build-arg saat docker Build
+ - kita juga bisa meng-override valuenya dengan docker compose dengan mendefinisikan args element
+
+### Port element (13)
+ - Port element di gunakan untk meng-expose port dari container ke host
+ - bisa mengexpose banyak port karna value dari ports element berupa array
+ - format yg di gunakan <host_port>:<container_port>
+
+### environment element (15)
+ - kita juga bisa mendefinisikan env dengan menggunakan env element
+
+### depends element (18)
+ - depends element di gunakan untuk menentukan urutan element yg harus di hidupkan atau di matikan
+ - contoh kasus: container nginx tidak boleh jalan terlebih dahulu sebelum container mysql hidup.
+
+### command element (docker-compose 25)
+ - command element di gunakna untuk override valud dari default command containner image
+ - ada dua style penulisan cmd, yaitu string dan array, jika lbih dari 1 gunakan array style
+
+### Restart element (docker-compose 67)
+ - Restart element di gunakan unutk merestart container dengan sebuah policy ketika cintainer berhenti
+ - ada beberapa policy yg di suport seperti
+  - no (default) tidak melakukan restart conntainer
+  - no-failure
+  - always
+  - unless-stopped
+- untuk mengecek berapa kali container sudah di resstart kita bisa gunakan perintah
+ ~ docker container inspect | grep -i restartcount
+$ on-failure (docker-compose 49)
+ - akan merestart ketika terjadi error. docker mengetahui error dari exit code selain 0.
+ - untuk mensimulasikakn errornya kita bisa menulis perintah exit 1 di shell dari container tersebut
+ - container kita bisa otomatis hidup saat docker daemond di jalankna
+$ always (docker-compose 62)
+ - always akan selalu melakukan resstart container, kecuali kita stop secara explisit maka container tersebut akan berhenti
+ - container kita bisa otomatis hidup saat docker daemond di jalankna
+$ unless-stopped (docker-compose 77)
+ - unless-stopped fungsinya mirip dengan always, hal mendasar yang membedakannya adalah ketika container di stop secara eksplisis, unless-stopped tidak akan merestart container meski docker daemon di restart
+
+### Resource Limitation  (docker-compose 68-75)
+ - kitaa bisa beri limit jumlah memory atau cpu di dalam container kita
+ - di versi docker sekarang, konfigurasi limit berada di deploy element
+ - nanti kota konfigurasi jumlah reservation & limit untuk cpu & memory
+  - limit unutk maksimal cpu dan memory
+  - reservation untuk minimal yag di dapatkan ketika container di jalankan
+
+### Network top-level element (docker-compose 122)
+ - di dalam docker compose sering kali kita akan menjalankan banyak kontainer, dan terkadang kontainer tersebut harus berkomunikasi satu sama lain
+ - kita dapat menggunanakn network top-level element untuk membuat docker network
+ - kita bisa membuaty banyak network dengan driver yang berbeda beda dalam satu docker file compose
+  $$ Agar network yg sudah kita defiisikan bisa di gunakan, maka kita perlu mendefinisikan network yg sudah kita buat di container yg inginn menggunakan network tersebut
+    - contohnya di sini kita akan menghubungkan container alpine dengan nginx
+    - untuk melakukan testing, kita dapat curl port 80 container nginx dari conntainer alpine
+  - untuk melakukan testing ke nginx melalui alpine apakah sudah benar terhubung atau belum
+   ~ / # curl test_unless_stopped:80
+  $$ Exinting network/network yang sudah ada (docker-compose 125)
+   - terkadang network yang ingin kita koneksikan sudah ada sebelum docker compose di buat, dan kita ingin menghubungkan ke network tersebut
+   - caranya dalah dengan mendefinisikan nama network yang sudah ada tersebut di network docker compose, diikuti sub-element external dengan nilai true
+   - contoh hasil exec kodenya
+    * # telnet postgresql 5432
+          Connected to postgresql
+    
+### Volume Top-level element (docker-compose 128)
+ - terkadang kita butuh data kita tetap persistance atau bisa di akses oleh container, tetntu saja kita dapat menggunakan docker volume untuk hal tersebut
+ - untuk mwnggunakan volume kita bisa lihat di (docker-compose 128 & 105)
+  $$ Exinting volume/volume yang sudah ada (docker-compose 133)
+   - terkadang volume yang ingin kita mount ke dalam container docker compose sudah di buat sebelumnya
+   - caranya dalah dengan mendefinisikan nama volume yang sudah ada tersebut di volumes docker compose, diikuti sub-element external dengan nilai true
+  $$ Bind Mounts  (docker-compose 109)
+    - sama seperti volume di dicker fundamental, yg sudah pernah kita bahas, kita bisa menggunakan volume dgan format bind Mound
+    - untuk menggunakan format tersebut, kita hanya perlu menuliskan path yang kita inginkan untuk di volume container tersebut
+    - cara penggunakannya
+     $ lokasi_folder_ingin_disimpan:destination_folder_atau_tempatfolder_imagenya_disimpan
+     ~  D:\Programming\Docker\data-mount\backup-volume-2:/var/lib/postgresql/data
+

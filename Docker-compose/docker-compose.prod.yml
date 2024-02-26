@@ -1,0 +1,15 @@
+services:
+  nginx:
+    # container config
+    container_name: nginx_server
+    # image config
+    # image: nginx:latest
+    # build config
+    build:
+      context: ./docker/nginx
+      dockerfile: Dockerfile.prod
+  nodejs:
+    container_name: nodejs_app
+    build:
+      context:  ./docker/nodejs
+      dockerfile: Dockerfile.prod

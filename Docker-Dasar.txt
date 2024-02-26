@@ -1,0 +1,239 @@
+### Docker Registry
+	- Tempat menyimpan docker image
+	- Dan di bisa di gunakan di docker daemon diamanpun selama bisa terkoneksi ke docker
+
+### Docker Image
+ Mirip seperti installer aplikasi, di mana di dalam docker image terdapat aplikasi dan dependency.
+ Sebelum kita bisa menjalankan aplikasi di docker, kita perlu memastikan memiliki docker image aplikasi tersebut.
+	- mendownload docker image
+	  ~docker image pull nama_image:tag  ::default latest
+	- menghapus docker image
+	  ~docker image rm nama_image:tag
+
+### Docker Container
+ Docker container mirip seperti aplikasi hasil installer.
+ Satu docker image bisa di gunakan untuk membuat beberapa docker container, asalkan namanya berbeda
+ Jika sudah membuat container, maka docker imagenya gak bisa di hapus, karna container tidak mengkopi isi image, melainkan hanya menggunakan isinya saja.
+ 1.Status container
+	-kita perlu menjalankannya jika memang ingin menjalankan containernya
+ 2.Melihat container
+	-semua container yang sdang berjalan atau tidak di docker daemaon
+	 ~ docker container ls -a
+	-container yang sedang berjalan saja
+	 ~ docker container ls
+ 3.Membuat container
+  ~ docker container create --name nama_container nama_image:tag
+ 4.Menjalankan container
+  ~ docker container start containerId/nama_container
+ 5.Menghentikan container
+  ~ docker container stop containerId/nama_container
+ 6.Menghapus container
+  ~ docker container rm containerId/nama_container
+ 7.Melihat logs container
+  ~ docker container logs containerId/nama_container
+ 8.Melihat logs container secara realtime
+  ~ docker container logs -f containerId/nama_container
+
+### Conatiner Exec
+ Saat membuat container,aplikasi di dalamnya hanya bisa di akses dari dalam container
+ Untuk masuk ke dalam container kita bisa menggunakan fitur Exec, digunakan untuk mengeksekusi kode program yang ada di dalam container    
+ 1.Masuk ke container
+  - untuk masuk ke container kita gunakan printah
+   ~ docker container exec -i -t nama_container /bin/bash
+  - -i adalah argumen interaktif, menjaga input tetap aktif
+  - -t adalah argumen untuk alokasi psuedo-TTY(terminal akses)
+  - /bin/bash adalah contoh kode program yang terdapat di dalam container
+
+### Container Port
+ Saat menjalankan container, dia terisolasi di dalam docker
+ Artinya sistem host(misal laptop kita), tidak bisa mengakses aplikasi yang ada di dalam container secara langsung, salah satu caranya adalah harus menggunakan container exec untuk masuk ke dalam container
+ 1.Port Forwading
+ Meneruskan port yang terdapat di sistem hostnya ke dalam docker container
+ Ini cocok jika kita ingin mengekspos port yang terdapat di container ke luar melalui sistem hostnya
+ Melakukan port forwarding
+  - kita gunakan printah brikut ketika membuat containernya
+   ~ docker container create --name nama_container --publish posthost:port_container image:tag
+  - jika ingin lebih dari satu portforwarding kita tambahkan dua kali parameter
+   ~ --publish
+  - --publish bisa di singkat menjadi -p
+
+### Container Environment Variabel
+ Saat membuat apps, use env is a tecniq agar apps changable secara dinamis
+ Dngan use env, we changeable config app, tanpa harus mengubah kode aplikasi kita
+ Docker container memiliki parameter yang bisa di gunakan untuk send env ke app yang terdapat di dalam container
+ 1. Addicional env
+  - untuk menambahkan env, kita bisa menggunakan perintah --env atau -e
+   ~ docker container create --name nama_container --env KEY="value" image:tag
+  - jika mau lebih dari 1 kita bisa tambah lagi --env KEY="value2" --env KEY="value3"
+  *Contoh:
+	docker container create --name contohmongo --publish 27017:27017 --env MONGO_INITDB_ROOT_USERNAME:mongo --env MONGO_INITDB_ROOT_PASSWORD:anangs mongo:latest
+
+### Container stats
+ Untuk melihat penggunaan resource seperti cpu dll dari tiap container kita bisa menggunakan perintah
+  ~ docker container stats
+
+### Container resource limit
+ Saat membuat container secara deafault dia akan menggunakan smua cpu dan memory yang di brikan ke docker (mac dan windows) dan akan menggunakan semua cpu dan memory yang tersedia di host (linux)
+ Jika terjadi kesalahan misal container lain terlalu banyak memakan cpu dan memory, maka bisa berdampak pada container lain atau bahkan host
+ Oleh karna itu ada baiknya kita berikan resource limit terhadap containernya
+1.Memory
+ Untuk menentukan jumlah memorynya cukup ketikan perintah berikut
+  ~ --memory di ikuti dengan angka memory yang di bolehkan untuk di gunakan
+ Ukuran yang bisa di gunakan
+	- b (bytes)
+	- k (kilo bytes)
+	- m (mega bytes)
+	- g (giga bytes)
+ *Contoh:
+	--memory 100m artinya 100 mega bytes
+ 2. Cpu
+  Unutk menentukan jumbalh cpu yang di izinkan kita bisa menggunakan printah
+   ~ --cpus angka cpu yang di berikan
+  Jika kita set dngan nilai 1.5 artunya container bisa menggunakan satu atau setengah cpu core
+
+### Bind Mount
+ Untuk melakukan mounting (sharing) file atau folder yang terdapat di sistem host ke container yang ada di docker
+ Ini berguna untuk mengirim configurasi dari luar container, atau misal menyimpan data yang di buat di container ke dalam sistem host
+ Jika file or folder tidak ada di host, scra otomatis akan di buatkan oleh docker
+ Untuk melakukan mounting kita bisa menggunakan parameter 
+  ~ --mount
+ Isi dari parameter mount memiliki aturannya tersendiri
+ 	PARAMETER   	| 	KETERANGAN
+	type		|	Tipe mount, bind atau volume
+	source		|	Lokasi file atau folder di sistem host
+	destination	|	---	-- 	--	di container
+	readonly	|	Jika ada, maka file or folder hanya bisa di baca di container tidak bisa di tulis
+
+ Untuk mlakukan mounting kita bisa menggunakan printah brikut
+  ~ docker container create --name nama_container --mount "type=bind,source=host_folder,destination=container_folder,readonly" image:tag
+ Perintah ini ~docker create --name postgresdata --mount "type=bind,source=D:\Programming\Docker\data-mount\postgres-data,destination=/var/lib/postgresql/data" --publish 3000:5432 --memory 100m --cpus 0.5 -e POSTGRES_USER=psql2 -e POSTGRES_PASSWORD=diana2 postgres:latest
+  dia terhubung dengan folder pemrograman dan sudah memiliki database, jika kita menghapusnya di container data yang sudah kita buat tidak ikut terhapus karna sudah di simpen di dalam folder source dan untuk menggunakan datanya lagi kita jalankan lagi perintah di atas
+
+### Docker volume
+ Docker volume mirip dengan bind, bedanya terdapat manajemen volume,dimana kita bisa melihat daftar volume,membuat volume,dan menghapus volume
+ Volume sendiri bisa di anggap storage yng di gunakan untuk menyimpan data,bedanya pada bind dia di simpan di dalam host,sdangkan pda volume dia di manage oleh docker
+ 1. Melihat volume
+  Secara default data container di simpan di dalam volume
+  Kita bisa melihat daftar volume dengan printah
+   ~ docker volume ls
+ 2. Membuat volume
+  ~ docker volume create nama_volume
+ 3. Menghapus volume
+  Volume container bisa di hapus jika tidak di gunakan lagi oleh container
+  Untuk menghapus volume, kita bisa menggunakan printah
+   ~ docker volume rm nama_volume
+
+### Container volume
+ Keuntungan menggunakan volume adlah, jika container sudah di hapus maka datanya akan tetap aman di dalam volume
+ Untuk menggunakan volume hampir sama dengan menggunakan bind mount, kita bisa menggunakan parameter --mount, namun dengan menggunakan type volume dan source nama volumenya
+  ~ docker container create --name postgredatavolume --mount "type=volume,source=postgrevolume,destination=/var/lib/postgresql/data" -p 3000:5432 --memory 100m --cpus 0.5 -e POSTGRES_USER=mount -e POSTGRES_PASSWORD=volume postgres:latest
+
+### Backup volume
+ Kita bisa memanfaatkan container untuk melakukan backup data yang ada di dalam volume ke dalam zip atau tar.gz
+ *Tahapan melakukan backup
+  1.matikan container yang menggunakan volume yang ingin kita backup
+  2.buat container baru dengan dua mount, volume yang ingin kita backup, dan bind mount folder dari sistem host
+  3.lakukan backup menggunakan container dengan cara meng-archive isi volume, dan simpan di bind mount folder
+  4.isi file backup sekarang, ada di folder sistem host
+  5.delete container yang kita gunakan untuk melakukan backup
+ ~ docker container create --name nginxbackup --mount "type=bind,source=D:\Programming\Docker\data-mount\backup-volume,destination=/backup-volume" --mount "type=volume,source=postgrevolume,destination=/data" nginx:latest
+
+### Menjalankan container secara langsung
+ Menggunakan printah run untuk menjalankan printah di container dan gunakan parameter --rm untuk melakukan otomatis remove container setelah printahnya selesai berjalan
+  ~ docker container run --rm --name ubuntubackup --mount "type=bind,source=D:\Programming\Docker\data-mount\backup-volume,destination=/backup-volume" --mount "type=volume,source=postgrevolume,destination=/data" ubuntu:latest tar cvf /backup-volume/postgre-backup.tar.gz /data
+
+### Restore volume
+ Setelah melakukan backup volume ke dalam file archive, kita bisa menyimpan file archive backup tersebut ke tempat yang lebih aman, misal cloud storage
+ Kita akan coba melakukan restore data backup ke dalam volume baru, untuk memastikan data backup yang kita lakukan tidak korup
+ *Tahapan melakukan restore
+  1.buat volume baru untuk lkasi restore dan backup
+  2.buat container baru dengan dua mount, volume baru yang ingin kitarestore backup, dan bind mount folder dari sistem host yang berisi file backup
+  3.restore use container dengan cara meng-extract isi backup file dalam volume
+  4.isi file backup sekarang sudah di restore ke volume
+  5.delete container yang kita gunakan untuk melakukan restore
+  6.vol baru yng brisi dta backup siap di gunakan oleh container baru
+ ~ docker container run --rm --name ubunturestore --mount "type=bind,source=D:\Programming\Docker\data-mount\backup-volume,destination=/backup-volume" --mount "type=volume,source=postgredatarestore,destination=/data" ubuntu:latest bash -c  "cd /data && tar xvf /backup-volume/postgre-backup.tar.gz --strip 1"
+
+### Docker network
+ Secara default container saling terosolasi satu sama lain,jika kita memanggil antar container,bisa di pastikan itu takan bisa di lakukan
+ Docker memiliki fitur network yang bisa di gunakan untuk membuat jaringan di dalam docker
+ Dengan begitu kita bisa mengkoneksikan container dengan container lainnya didalam satu network yang sama
+ Jika beberapa container barada dalam network yang sama,secara otomatis container trsbut bisa saling berkomunikasi
+ 1.Network driver
+  Saat membuat network kita perlu menentukan driver yang ingin kita gunakan
+   1.bridge, driver yg di gunakan untuk membuat network secara virtual yng memungkinkan container yg terkoneksi di bridge yg sama bisa saling berkomunikasi
+   2.host, driver yang di gunakan untuk membuat network yng sama dengan sistem host,hanya berjalan di docker linux,tidak bisa digunakan di mac atau windowa
+   3.none, driver untuk membuat network yng tidak bisa berkomunikasi
+ 2.Melihat network
+  Untuk melihat network di docker, kita bisa gunakan printah brikut
+   ~ docker network ls
+ 3.Membuat network
+  Untuk membuat network baru,kita bisa menggunakan printah
+   ~ docker network create --driver nama_driver nama_network
+ 4.Menghapus network
+  Network tidak bisa di hapus jikasudah digunakan oleh container,kita harus menghapus containernya terlebih dahulu dari network
+  Untuk mengapus network, kita bisa gunakan printah
+   ~ docker network rm nama_network
+ 5.Container network
+  Container yang ada di dlm network yg sama bisa saling berkomunikasi(tergantung jnis drivernya)
+  Container bisa mengakses continer lain dgn mnybut hostname dari containernya, yaitu nama containernya
+ 6.Membuat container dngan network
+  Unutk menambahkan container ke network, kita bisa menambahkan printah --network ketika membuat container
+   ~ docker container create --name nama_container --network nama_network image:tag
+  *LIHAT DI DALAM networking-use-driver UNTUK CONTOH LEBIH JELAS
+ 7.Menghapus container dari network
+  Jika di perlukan, kita bisa menghapus container dari network dengan printah
+   ~ docker network disconnect nama_network nama_container
+ 8.Menambahkan container ke network
+  Jika container sudah terlanjut di buat, kita bisa menambahkan container yang sudah di buat ke network dengan printah
+   ~ docker network connect nama_network nama_container
+
+### Inspect
+ Misal kita ingin melihat detail dari image,container,network,volume. Printah apa yang di gunakan,environment apa yang di gunakan,atau port apa yang di gunakan?
+ Dengan fitur inspect ini kita bisa melihat detail dari tiap hal yang ada di docker
+ 1.Menggunakan inpect
+  ~ docker image inspect nama_image
+  ~ docker container inspect nama_container
+  ~ docker volume inspect nama_volume
+  ~ docker network inspect nama_network
+
+### Prune
+ Saat kita menggunakan docker, kadang ada kalanya kita ingin membersihkan hal hal yang sudah tidak di gunakan lagi,misal container yang sudah di stop,image yg tidak di gunakan oleh container,atau volume yang tidak di gunakan oleh container
+ Fitur untuk membersihkan secara otomatis di docker bernama prune
+ Perintah prune
+  ~ docker image prune
+  ~ docker container prune
+  ~ docker volume prune
+  ~ docker network prune
+ Atau kita bisa menggunakan satu printah untuk menghapus container,network dan image yang sudah tidak digunakan menggunakan printah
+  ~ docker system prune
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

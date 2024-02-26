@@ -1,0 +1,19 @@
+docker network create --driver bridge mongonetwork
+
+--- ini kita tidak perlu publis yang akan kita publis nanti mongo-expressnya karna mongodb ini kita akan koneksikan ke dalam mongo-express
+docker container create --name mongodb --network mongonetwork -e MONGO_INITDB_ROOT_USERNAME=mongo -e MONGO_INITDB_ROOT_PASSWORD=farid mongo:latest  
+
+--- contoh mengkoneksikan mongodb dengan mongodb-express
+ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo:27017/
+
+--- penjelasan
+ME_CONFIG_MONGODB_URL: mongodb://username_db:password_db@nama_container:port_container/
+
+docker container create --name mongodbexpress --publish 8081:8081 --network mongonetwork -e ME_CONFIG_BASICAUTH_PASSWORD="faridanangs" -e ME_CONFIG_BASICAUTH_USERNAME="admin" -e ME_CONFIG_MONGODB_URL="mongodb://mongo:farid@mongodb:27017/" mongo-express:latest  
+
+
+docker container start mongodb
+
+docker container start mongodbexpress
+
+

@@ -1,0 +1,134 @@
+services:
+  # nodejs:
+  #   container_name: nodejs_app
+  #   build:
+  #     context: ./docker/nodejs
+  #     dockerfile: Dockerfile.staging
+  #   ports:
+  #     - 3004:3000
+  #   command: app.js  CMD string style
+
+  # nginx:
+  #   container_name: nginx_server
+  #   build:
+  #     context: ./docker/nginx
+  #     dockerfile: Dockerfile.staging
+  #     args:
+  #       - VERSION=1.2.3.4
+  #   ports:
+  #     - 8001:80
+  #   environment:
+  #     - SPED=900
+  #     - RATE_LIMIT=true
+  #   # depends_on:
+  #   #   - postgresql
+  #   command:   # CMD array style 1
+  #     - /bin/sh
+  #     - -c
+  #     - |
+  #       echo "nginx dari style array 1" > /usr/share/nginx/html/index.html
+  #       nginx -g 'daemon off;'
+
+  # nginx-2:
+  #   container_name: nginx_server-2
+  #   build:
+  #     context: ./docker/nginx
+  #     dockerfile: Dockerfile.staging
+  #     args:
+  #       - VERSION=1.2.3.4
+  #   ports:
+  #     - 8002:80
+  #   environment:
+  #     - SPED=900
+  #     - RATE_LIMIT=true
+  #   # depends_on:
+  #   #   - postgresql
+  #   command:   # CMD array style 2
+  #     [ "/bin/sh" , "-c", "echo 'nginx dari style array 2' > /usr/share/nginx/html/index.html && nginx -g 'daemon off;'"]
+
+  # test_onfailure:
+  #   container_name: test_onfailure
+  #   restart: on-failure
+  #   image: nginx:alpine
+  #   ports:
+  #     - 8084:80
+  #   command:
+  #     - /bin/sh
+  #     - -c
+  #     - |
+  #       sleep 15
+  #       exit 1
+
+  # test_always:
+  #   container_name: test_always
+  #   image: nginx:alpine
+  #   ports:
+  #     - 8085:80
+  #   restart: always
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: "0.5"
+  #         memory: "20m"
+  #       reservations:
+  #         cpus: "0.5"
+  #         memory: "10m"
+
+  # test_unless_stopped:
+  #   container_name: test_unless_stopped
+  #   image: nginx:alpine
+  #   ports:
+  #     - 8086:80
+  #   restart: unless-stopped
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: "0.5"
+  #         memory: "30m"
+  #       reservations:
+  #         cpus: "0.5"
+  #         memory: "10m"     
+  #   networks:
+  #     - network-mantap
+  #   volumes:
+  #     - nginx-volume:/var/share/nginx/html
+
+  postgresql:
+    container_name: postgresql-network
+    image: postgres:latest
+    ports:
+      - 3030:5432
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+    networks:
+      - postgres
+    restart: always
+    volumes:
+      - postgre-volume:/var/lib/postgresql/data
+      - D:\Programming\Docker\data-mount\backup-volume-2:/var/lib/postgresql/data
+
+
+  # alpine:
+  #   container_name: alpine_app
+  #   image: alpine
+  #   networks:
+  #     - network-mantap
+  #     - postgres
+  #   command: 
+  #     - /bin/sh
+  #     - -c
+  #     - |
+  #       apk add curl busybox-extras
+  #       tail -f /dev/null
+
+networks:
+  network-mantap:
+    driver: bridge
+  postgres:
+    external: true
+
+volumes:
+  postgre-volume:
+  nginx-volume:
+    external: true

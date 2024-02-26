@@ -1,0 +1,53 @@
+### Pengenalan dockerfile
+ - docker file adalah file text yang berisi printah yg bisa di gunakan untuk membuat docker image
+ - anggap saja semua instruksi untuk menjalankan aplikasi kita, kita simpan di dockerfile, nanti docker file tersebut akan di eksekusi sebagai printah untuk membuat docker image
+
+### Docker Build
+ - untk membuat docker image dari dockerfile, kita bisa menggunakan printah docker build,
+ - ketika docker image di buat dgn dockerfile nama imagenya otomatis random, untuk mengubahnya supaya tidak random kita bisa gunakan printah -t 
+ - cara penggunaan docker build
+    ~ docker build -t nama_image:tag nama_folder_tempat_disimpannya_dockerfile
+ - jika mau lebih dari 1 image
+    ~ docker build -t nama_image/app:tag -t nama_image2/app:lates nama_folder_tempat_disimpannya_dockerfile
+   ## contoh ~ docker build -t template/golang:latest from
+### Dockerfile File format
+ - untuk membuat docker file biasanya di buat dalam a file dgan nama Dockerfile
+ - walaupun sebenarnya bisa saja namanya bebas, tapi di sarankan menggunakan Dockerfile
+
+### Instruction format
+ - berikut format untuk docker file
+   # Komentar
+   INSTRUCTION arguments
+ - INSTRUCTION adalah printah yang di gunakan di Dockerfile, ada bnyak printah yg tersedia
+ - arguments adalalah data argument untuk INSTRUCTION, yang menyesuaikan dengan jnis INSTRUCTION yang di gunakan
+
+
+### From INSTRUCTION
+ - saat kita membuat docker file, biasanya perintah pertama adalah melakukan build state dengan instruksi FROM
+ - jarang sekali kita membuat docker file, dari scratch(kosong), biasanya kita membuat docker image dari docker image lain yang sudah ada
+ -untuk menggunakan FROM, kita bisa gunakan perintah
+    ~ FROM image:tag
+
+### Run Instruction
+ - run adalah a intruksi untuk menjalankan printah di dalm image pada saat build stage
+ - hasil printah run akan di comit dalam prubahan image, jadi printah run akan di exec pada saat proses docker build saja, setelah menjadi image, printah trsbut tidak di jalankan lagi
+ - jadi ketika kita menjalankan docker container dari image tersebut, maka printah run tidak akan di jalankan lagi.
+ - Run instruction format
+  - RUN command
+  - RUN["executable", "argument", "..."]
+
+### display output
+ - di docker terbaru dia tidak menampilkan tulisan detail dari buildnya
+ - jika ingin menampilkan detailnua, maka gunakan printah --progress=plain
+ - selain itu docker build jiga melakukan cache untuk mendeteksi terjadinya perubahan pada dockerfile, jika kita ingin mengulangi lagi tanpa cache kita gunkan printah --no-cache
+
+### Command Instruction
+ - CMD atau command, merupakan instruksi yg di gunakan ketika docker container berjalan
+ - CMD tidak akan di jalankan ketika proses build,namun di jalankan ketika docker container berjalan
+ - dalam dockerfile, kita tidak bisa menambah lebih dari 1 instruksi CMD, jika lebih yang di eksekusi adlah cmd terakhir
+ $ Command instruction format
+  - CMD command param param
+  - CMD ["executable", "param", "param"]
+  - CMD ["param", "param"] akan menggunakan executable entry point
+
+

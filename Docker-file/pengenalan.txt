@@ -1,0 +1,115 @@
+### Pengenalan dockerfile
+ - docker file adalah file text yang berisi printah yg bisa di gunakan untuk membuat docker image
+ - anggap saja semua instruksi untuk menjalankan aplikasi kita, kita simpan di dockerfile, nanti docker file tersebut akan di eksekusi sebagai printah untuk membuat docker image
+
+### Docker Build
+ - untk membuat docker image dari dockerfile, kita bisa menggunakan printah docker build,
+ - ketika docker image di buat dgn dockerfile nama imagenya otomatis random, untuk mengubahnya supaya tidak random kita bisa gunakan printah -t 
+ - cara penggunaan docker build
+    ~ docker build -t nama_image:tag nama_folder_tempat_disimpannya_dockerfile
+ - jika mau lebih dari 1 image
+    ~ docker build -t nama_image/app:tag -t nama_image2/app:lates nama_folder_tempat_disimpannya_dockerfile
+   ## contoh ~ docker build -t template/golang:latest from
+### Dockerfile File format
+ - untuk membuat docker file biasanya di buat dalam a file dgan nama Dockerfile
+ - walaupun sebenarnya bisa saja namanya bebas, tapi di sarankan menggunakan Dockerfile
+
+### Instruction format
+ - berikut format untuk docker file
+   # Komentar
+   INSTRUCTION arguments
+ - INSTRUCTION adalah printah yang di gunakan di Dockerfile, ada bnyak printah yg tersedia
+ - arguments adalalah data argument untuk INSTRUCTION, yang menyesuaikan dengan jnis INSTRUCTION yang di gunakan
+
+
+### From INSTRUCTION
+ - saat kita membuat docker file, biasanya perintah pertama adalah melakukan build state dengan instruksi FROM
+ - jarang sekali kita membuat docker file, dari scratch(kosong), biasanya kita membuat docker image dari docker image lain yang sudah ada
+ -untuk menggunakan FROM, kita bisa gunakan perintah
+    ~ FROM image:tag
+
+### Run Instruction
+ - run adalah a intruksi untuk menjalankan printah di dalm image pada saat build stage
+ - hasil printah run akan di comit dalam prubahan image, jadi printah run akan di exec pada saat proses docker build saja, setelah menjadi image, printah trsbut tidak di jalankan lagi
+ - jadi ketika kita menjalankan docker container dari image tersebut, maka printah run tidak akan di jalankan lagi.
+ - Run instruction format
+  ~ RUN command
+  ~ RUN["executable", "argument", "..."]
+ - shell command yang di gunakan secara default adalah /bin/sh -c untuk linux dan cmd /S /C untuk windows
+ - contohnya kita ingin instal text editor vin di dalam image yg  udah kita buat
+  ~ RUN apk add vim
+### display output
+ - di docker terbaru dia tidak menampilkan tulisan detail dari buildnya
+ - jika ingin menampilkan detailnua, maka gunakan printah --progress=plain
+ - selain itu docker build jiga melakukan cache untuk mendeteksi terjadinya perubahan pada dockerfile, jika kita ingin mengulangi lagi tanpa cache kita gunkan printah --no-cache
+
+### Command Instruction
+ - CMD atau command, merupakan instruksi yg di gunakan ketika docker container berjalan
+ - CMD tidak akan di jalankan ketika proses build,namun di jalankan ketika docker container berjalan
+ - dalam dockerfile, kita tidak bisa menambah lebih dari 1 instruksi CMD, jika lebih yang di eksekusi adlah cmd terakhir
+ $ Command instruction format
+  - CMD command param param
+  - CMD ["executable", "param", "param"]
+  - CMD ["param", "param"] akan menggunakan executable entry point
+
+### Entrypoint instruction
+ - fungsi Entrypoint sama seperti cmd, hanya saja isinya tidak bisa di replace saat container di jalankan
+ - Entrypoint memiliki 2 format
+  ~ ENTRYPOINT["exutable", "param1", "param2"] #format executable form
+  ~ ENTRYPOINT command param1 param2  #format shell form
+-kalo kita taruh misal hello usman akhir ini 
+  ~ docker run --rm  --name entry template/entry hello usman
+  - maka dia akan menjalankannya seperti ini
+  - hello world hello suman
+ - kita bisa menggabungkan cmd dan entrypoin ini ENTRYPOINT INI SEBAGAI NILAI DEFAULT SEDANGKAN CMD SEBAGAI ARGUMENYA CONTOHNY LIAH DI ENTRYPOINT
+
+### Copy Instruction
+ - copy lebih di sarankan dari pada add karna kopi tidak langsung meng extract file arsive secara otomatis
+ - cara menjalankan printah copy
+  ~ COPY nama_file.xyz tempat_file_disimpan/destination
+
+### .dockerignore
+ - berdungsi untuk mengabaikan copy/add file/folder yang tidak ingin kita masukan ke dalam docker kita
+ - cukup tulis nama file/folder yang tidak kita inginnkan di dalam dockerignorenya
+
+### Expose instruction
+ - ini biasanya di gunakan untuk memeberikan informasi, bahwa image yg di buat akan di jalankan menjadi container yg akan memiliki port yg berjalan
+ - kita bisa menspesifikasikan protokol yg di gunakan seperti (tcp/udp), jika tidak di definisikan maka dia akan otomatis menggunakan tcp
+ - contoh penulisan
+  ~ EXPOSE 8080/UDP
+
+### Env instruction
+ - ini biasa di gunakan untuk membuat variable ketika nantinya kontainer akan di jalankan
+ - env ini di gunakan agar konfigurasi app jadi lebih dinamis
+ - env instruction dapat di re-use degan format ${nama_env}
+ - terkadang untuk sebuah aplikasi memiliki banyak env yg harus di definisikan
+ - kita bisa memanfaatkan opsi --env-file={file} untuk memasukan banyak env saat menjalankan docker
+
+### arg instruction
+ - fungsi arg sama seperti env, namun arg hanya bisa fi gunakan saay proses build image saja
+ - gunakan ketika ingin mengkonfigurasi hal yg statik
+
+### Workdir Instruction
+ - Workdir atau working directory adalah area kerja yang berupa folder didalam image
+ - folder belum ada maka otomatis akan di buat
+ - workdir bisa fi definisikan dalam benruk relative atau absolut printah
+ 
+### Multi stage
+ - saat membuat image dari base image yg ukuranya besar, tentunya ukuran image kita akan besar juga
+ - terkadang di case tertentu kita tidak membutuhkan semua defedensi di base image tersebut
+  - contoh kasus di aplikasi golang, kita bisa gunakan image:alpine sebagai base image, tapi itu akan useless, karna sejatinya hasil akhir build golang adalah single binary file
+  - oleh karna itu file-file defedensi golang itu sendiri tidak di perlukan saat container di jalankan.
+- docker mendukung multi stage menggunakan from instruction untuk mengatasi hal ini dan membuat ukuran image jauh lebih kecil
+- contohnya ada di dockerfile go-hello-world
+
+### Push image
+ - untuk mepush image ke dalam docker hub kita perlu mendpatkan token acces di dalam securyty
+ - setelah itu kita akan di buatkan perintah untuk login dan password yang sudah di buatkan secara random oleh docker hub
+### Docker Tag & Push
+ - agar image kita bisa di push ke docker hub, kita perlu membuat tag dgan format <username>/<image>:<tag>
+ - bila image sudah terbuat sebelumnya bisa gunakan perintah berikut
+  ~ docker tag <image>:<tag> <username>/<image>:<tag>
+ - contoh perintah
+  ~ docker tag go-hello-world:small temlep/go-hello-world:small
+ - untuk melakukan push bisa menggunakan perintah berikut ini
+  ~ docker push <username>/<image>:<tag>
